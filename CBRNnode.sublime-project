@@ -1,0 +1,23 @@
+{
+  "folders":
+  [
+    {
+      "folder_exclude_patterns":
+      [
+        "*"
+      ],
+      "file_exclude_patterns":
+      [
+        "*.zip",
+        "*.sublime-project"
+      ],
+      "follow_symlinks": true,
+      "name": "CBRNnode: Project",
+      "path": "."
+    }, {
+      "follow_symlinks": true,
+      "name": "CBRNnode: App",
+      "path": "app/"
+    }
+  ]
+}

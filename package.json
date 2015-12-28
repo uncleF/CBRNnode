@@ -1,0 +1,23 @@
+{
+  "name": "cbrnnode",
+  "version": "1.0.0",
+  "description": "CBRNnode",
+  "main": "app/cbrn.js",
+  "private": true,
+  "dependencies": {
+    "archiver": "^0.21.0",
+    "chalk": "^1.1.1",
+    "image-size": "^0.4.0",
+    "minimist": "^1.2.0"
+  },
+  "scripts": {},
+  "bin": {
+    "cbrn" : "app/cbrn.js"
+  },
+  "author": "uncle.funkay@gmail.com",
+  "license": "ISC",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  }
+}
