@@ -1,6 +1,10 @@
 # [CBRNnode](https://github.com/uncleF/CBRNnode)
 
-Handy opinionated tool for renaming comic book pages according to the predetermend pattern: DIRECTORY_NAME - PAGE(N)[ - PAGE(N+1)].jpg
+Handy opinionated tool for renaming comic book pages according to the predetermend pattern:
+
+```
+DIRECTORY_NAME - PAGE(N)[ - PAGE(N+1)].jpg
+```
 
 ## Prerequisites
 
