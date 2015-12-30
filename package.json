@@ -1,6 +1,6 @@
 {
   "name": "cbrnnode",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "CBRNnode",
   "main": "app/cbrn.js",
   "private": true,
@@ -10,14 +10,26 @@
     "image-size": "^0.4.0",
     "minimist": "^1.2.0"
   },
+  "devDependencies": {},
   "scripts": {},
   "bin": {
-    "cbrn" : "app/cbrn.js"
+    "cbrn": "app/cbrn.js"
   },
   "author": "uncle.funkay@gmail.com",
   "license": "ISC",
   "directories": {
-    "doc": "docs",
-    "test": "tests"
-  }
+    "doc": "docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uncleF/CBRNnode.git"
+  },
+  "keywords": [
+    "comics",
+    "collecting"
+  ],
+  "bugs": {
+    "url": "https://github.com/uncleF/CBRNnode/issues"
+  },
+  "homepage": "https://github.com/uncleF/CBRNnode#readme"
 }
