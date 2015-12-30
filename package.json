@@ -3,7 +3,6 @@
   "version": "0.0.1",
   "description": "CBRNnode",
   "main": "app/cbrn.js",
-  "private": true,
   "dependencies": {
     "archiver": "^0.21.0",
     "chalk": "^1.1.1",
@@ -15,7 +14,7 @@
   "bin": {
     "cbrn": "app/cbrn.js"
   },
-  "author": "uncle.funkay@gmail.com",
+  "author": "unclef.npm@gmail.com",
   "license": "ISC",
   "directories": {
     "doc": "docs"
