@@ -1,108 +1,116 @@
 #! /usr/bin/env node
 
-/* jshint browser:true */
-
 var fs = require('fs');
+var _ = require('lodash');
 var sizeOf = require('image-size');
 var archiver = require('archiver');
 var args = require('minimist')(process.argv.slice(2));
 var chalk = require('chalk');
 
 var dir = args.d ? args.d + '/' : './';
-var zip = args.zip ? true : false;
-
-var issues;
+var zip = args.zip;
 
 var DOUBLE_PAGE_V_MAX_RATIO = 1.35;
 
 function getIssues() {
-  issues = fs.readdirSync(dir);
+  fs.readdir(dir, iterateThroughIssues);
 }
 
-function iterateOverIssues() {
-  for (var index = 0, length = issues.length; index < length; index += 1) {
-    var issue = dir + issues[index];
-    if (!fs.statSync(issue).isFile()) {
-      renameIssue(issue, issues[index]);
-      if (zip) {
-        archiveIssue(issue, issues[index]);
+function iterateThroughIssues(error, issues) {
+  _.forEach(issues, function(issue) {
+    var issueDir = dir + issue;
+    fs.stat(issueDir, function(error, status) {
+      if (status.isDirectory()) {
+        renameIssue(issueDir, issue);
+        if (zip) {
+          archiveIssue(issueDir, issue);
+        }
       }
-    }
-  }
+    });
+  });
 }
 
-function renameIssue(issue, name) {
-  var pages = fs.readdirSync(issue);
-  var file;
-  var size;
-  var ratio;
-  var page = 0;
-  var nextPage;
+function renameIssue(issueDir, issue) {
+  fs.readdir(issueDir, function(error, pages) {
+    var number = 0;
+    var length = getIssueLength(pages, issueDir);
+    _.forEach(pages, function(page) {
+      var file = issueDir + '/' + page;
+      if (fs.statSync(file).isFile()) {
+        number = renamePage(file, number, issueDir, issue, length);
+      }
+    });
+  });
+}
+
+function renamePage(file, number, issueDir, issue, length) {
+  var size = sizeOf(file);
+  var ratio = size.width / size.height;
   var pageNumber;
   var newName;
-  for (var index = 0, length = pages.length; index < length; index += 1) {
-    file = issue + '/' + pages[index];
-    if (fs.statSync(file).isFile()) {
-      size = sizeOf(file);
-      ratio = size.width / size.height;
-      if (page > 1 && size.width > size.height) {
-        nextPage = page + 1;
-        if (page < 10) {
-          if (length >= 100) {
-            pageNumber = '00' + page + ' - 00' + nextPage;
-          } else {
-            pageNumber = '0' + page + ' - 0' + nextPage;
-          }
-        } else if (nextPage > 9 && page <= 9) {
-          if (length >= 100) {
-            pageNumber = '00' + page + ' - 0' + nextPage;
-          } else {
-            pageNumber = '0' + page + ' - ' + nextPage;
-          }
-        } else {
-          if (length >= 100) {
-            if (nextPage < 100) {
-              pageNumber = '0' + page + ' - 0' + nextPage;
-            } else if (nextPage > 99 && page <= 99) {
-              pageNumber = '0' + page + ' - ' + nextPage;
-            } else {
-              pageNumber = page + ' - ' + nextPage;
-            }
-          } else {
-            pageNumber = page + ' - ' + nextPage;
-          }
-        }
-        page += 1;
-      } else {
-        if (page <= 9) {
-          if (length >= 100) {
-            pageNumber = '00' + page;
-          } else {
-            pageNumber = '0' + page;
-          }
-        } else {
-          if (length >= 100) {
-            if (nextPage < 100) {
-              pageNumber = '0' + page;
-            } else {
-              pageNumber = page;
-            }
-          } else {
-            pageNumber = page;
-          }
-        }
-      }
-      newName = name + ' - ' + pageNumber + '.jpg';
-      if (size.width > size.height && ratio > DOUBLE_PAGE_V_MAX_RATIO) {
-        console.log(chalk.yellow(newName));
-      }
-      fs.renameSync(file, (issue + '/' + newName));
-      page += 1;
-    }
+  if (number > 1 && size.width > size.height) {
+    pageNumber = renameHorizontalPage(number, length);
+    number += 1;
+  } else {
+    pageNumber = renameVerticalPage(number, length);
   }
+  newName = issue + ' - ' + pageNumber + '.jpg';
+  if (size.width > size.height && ratio > DOUBLE_PAGE_V_MAX_RATIO) {
+    console.log(chalk.yellow(newName));
+  }
+  fs.rename(file, (issueDir + '/' + newName));
+  number += 1;
+  return number;
 }
 
-function archiveIssue(issue, name) {
+function renameHorizontalPage(number, length) {
+  var numberNext = number + 1;
+  var pageNumber;
+  if (length >= 100) {
+    if (number <= 8) {
+      pageNumber = '00' + number + ' - 00' + numberNext;
+    } else if (number === 9 && numberNext === 10) {
+      pageNumber = '00' + number + ' - 0' + numberNext;
+    } else if (number <= 98) {
+      pageNumber = '0' + number + ' - 0' + numberNext;
+    } else if (number === 99 && numberNext === 100) {
+      pageNumber = '0' + number + ' - ' + numberNext;
+    } else {
+      pageNumber = number + ' - ' + numberNext;
+    }
+  } else {
+    if (number <= 8) {
+      pageNumber = '0' + number + ' - 0' + numberNext;
+    } else if (number === 9 && numberNext === 10) {
+      pageNumber = '0' + number + ' - ' + numberNext;
+    } else {
+      pageNumber = number + ' - ' + numberNext;
+    }
+  }
+  return pageNumber;
+}
+
+function renameVerticalPage(number, length) {
+  var pageNumber;
+  if (length >= 100) {
+    if (number <= 9) {
+      pageNumber = '00' + number;
+    } else if (number <= 99) {
+      pageNumber = '0' + number;
+    } else {
+      pageNumber = number;
+    }
+  } else {
+    if (number <= 9) {
+      pageNumber = '0' + number;
+    } else {
+      pageNumber = number;
+    }
+  }
+  return pageNumber;
+}
+
+function archiveIssue(issue) {
   var output = fs.createWriteStream(issue + '.zip');
   var archive = archiver('zip');
   archive.pipe(output);
@@ -115,9 +123,14 @@ function archiveIssue(issue, name) {
   archive.finalize();
 }
 
-function processIssues() {
-  getIssues();
-  iterateOverIssues();
+function getIssueLength(pages, issueDir) {
+  var length = 0;
+  _.forEach(pages, function(page) {
+    var file = issueDir + '/' + page;
+    var size = sizeOf(file);
+    length += size.width > size.height ? 2 : 1;
+  });
+  return length;
 }
 
-processIssues();
+getIssues();
