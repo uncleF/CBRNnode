@@ -37,7 +37,7 @@ function generateIssuePath(issue) {
 }
 
 function iterateThroughIssues(issues) {
-  return issues.map(function(issue) {
+  return new Bluebird.all(issues.map(function(issue) {
     return new Bluebird(function(resolve, reject) {
       var issuePath = generateIssuePath(issue);
       fs.stat(issuePath, function(error, status) {
@@ -54,7 +54,7 @@ function iterateThroughIssues(issues) {
         }
       });
     });
-  });
+  }));
 }
 
 function renameSinglePage(number, length) {
@@ -216,6 +216,5 @@ function logError(error) {
 
 getIssues()
   .then(iterateThroughIssues)
-  .all()
   .catch(logError)
   .done(logDone);
