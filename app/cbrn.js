@@ -2,7 +2,7 @@
 
 /*jslint node: true */
 
-var Bluebird = require('bluebird');
+var Promise = require('bluebird');
 var fs = require('fs');
 var archiver = require('archiver');
 var fileType = require('file-type');
@@ -14,6 +14,7 @@ var dir = args.d ? args.d + '/' : './';
 var zip = args.zip;
 var comp = args.comp;
 var clean = args.clean;
+var help = args.h;
 
 var SINGLE_MAX_RATIO = 1.5372;
 var SPREAD_MAX_RATIO = 0.7688;
@@ -21,7 +22,7 @@ var MAX_RATIO_DELTA = 0.1500;
 var FILE_TYPES = ['jpg', 'png', 'gif', 'bmp', 'webp', 'tif'];
 
 function getIssues() {
-  return new Bluebird(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     fs.readdir(dir, function(error, files) {
       if (error) {
         reject(error);
@@ -37,8 +38,8 @@ function generateIssuePath(issue) {
 }
 
 function iterateThroughIssues(issues) {
-  return new Bluebird.all(issues.map(function(issue) {
-    return new Bluebird(function(resolve, reject) {
+  return new Promise.all(issues.map(function(issue) {
+    return new Promise(function(resolve, reject) {
       var issuePath = generateIssuePath(issue);
       fs.stat(issuePath, function(error, status) {
         var promise;
@@ -65,13 +66,13 @@ function renameSinglePage(number, length) {
     } else if (number <= 99) {
       pageNumber = '0' + number;
     } else {
-      pageNumber = number;
+      pageNumber = '' + number;
     }
   } else {
     if (number <= 9) {
       pageNumber = '0' + number;
     } else {
-      pageNumber = number;
+      pageNumber = '' + number;
     }
   }
   return pageNumber;
@@ -144,7 +145,7 @@ function getIssueLength(pages, issuePath) {
 }
 
 function renameIssue(issuePath, issue) {
-  return new Bluebird(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     if (!comp) {
       fs.readdir(issuePath, function(error, pages) {
         if (error) {
@@ -176,7 +177,7 @@ function renameIssue(issuePath, issue) {
 }
 
 function archiveIssue(issueInfo) {
-  return new Bluebird(function(resolve, reject) {
+  return new Promise(function(resolve, reject) {
     var issuePath = issueInfo[0];
     var issue = issueInfo[1];
     var output;
@@ -214,7 +215,14 @@ function logError(error) {
   console.error(error);
 }
 
-getIssues()
-  .then(iterateThroughIssues)
-  .catch(logError)
-  .done(logDone);
+if (!help) {
+  getIssues().then(iterateThroughIssues).catch(logError).done(logDone);
+} else {
+  console.log('Usage: cbrn [options]');
+  console.log('Options:');
+  console.log('  -d path - Path to the issues. If ommited current directory will be used');
+  console.log('  --zip - Archive renamed issues');
+  console.log('  --comp - Archive issues without renaming');
+  console.log('  --clean - Remove all non-images found inside each issue while renaming');
+  console.log('  -h - Help');
+}
