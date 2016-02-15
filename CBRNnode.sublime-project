@@ -21,7 +21,7 @@
     }, {
       "follow_symlinks": true,
       "name": "CBRNnode: Tests",
-      "path": "test/"
+      "path": "tests/"
     }
   ]
 }
