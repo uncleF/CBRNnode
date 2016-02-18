@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-/* jslint node: true */
+/* jslint node:true */
 
 var cbrn = require('./rename');
 var args = require('minimist')(process.argv.slice(2));
