@@ -1,13 +1,12 @@
 #! /usr/bin/env node
 
-/*jslint node: true */
+/* jslint node: true */
 
-var cbrn = require('./cbrnrename');
-
+var cbrn = require('./rename');
 var args = require('minimist')(process.argv.slice(2));
 
 var options = {
-  dir: args.d ? args.d + '/' : './',
+  dir: args.d ? args.d : './',
   zip: args.zip,
   comp: args.comp,
   clean: args.clean,

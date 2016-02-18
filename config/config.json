@@ -1,0 +1,6 @@
+{
+  "singleMaxRatio": 1.5372,
+  "spreadMaxRatio": 0.7688,
+  "maxRatioDelta": 0.1500,
+  "fileTypes": ["jpg", "png", "gif", "bmp", "webp", "tif"]
+}
