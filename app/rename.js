@@ -6,14 +6,11 @@ var archiver = require('archiver');
 var fileType = require('file-type');
 var sizeOf = require('image-size');
 var chalk = require('chalk');
-var qconf = require('qconf');
 
-var config = qconf();
-
-const SINGLE_MAX_RATIO = config.get('singleMaxRatio');
-const SPREAD_MAX_RATIO = config.get('spreadMaxRatio');
-const MAX_RATIO_DELTA = config.get('maxRatioDelta');
-const FILE_TYPES = config.get('fileTypes');
+const SINGLE_MAX_RATIO = 1.5372;
+const SPREAD_MAX_RATIO = 0.7688;
+const MAX_RATIO_DELTA = 0.1500;
+const FILE_TYPES = ['jpg', 'png', 'gif', 'bmp', 'webp', 'tif'];
 
 var dir;
 var zip;
