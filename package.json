@@ -17,7 +17,6 @@
     "rewire": "^2.5.1"
   },
   "scripts": {
-    "prepublish": "npm test",
     "test": "mocha -R spec 'tests/'"
   },
   "bin": {
