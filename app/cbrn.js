@@ -10,6 +10,7 @@ var options = {
   zip: args.zip,
   comp: args.comp,
   clean: args.clean,
+  bd: args.bd
 };
 var help = args.h;
 
@@ -22,5 +23,6 @@ if (!help) {
   console.log('  --zip - Archive renamed issues');
   console.log('  --comp - Archive issues without renaming');
   console.log('  --clean - Remove all non-images found inside each issue while renaming');
+  console.log('  --bd - Processing bandes dessinées');
   console.log('  -h - Help');
 }

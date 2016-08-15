@@ -6,18 +6,16 @@ var archiver = require('archiver');
 var fileType = require('file-type');
 var sizeOf = require('image-size');
 var chalk = require('chalk');
-
-const SINGLE_MAX_RATIO = 1.5372;
-const SPREAD_MAX_RATIO = 0.7688;
-const MAX_RATIO_DELTA = 0.1500;
-const FILE_TYPES = ['jpg', 'png', 'gif', 'bmp', 'webp', 'tif'];
+var config = require('./configs.json');
 
 function run(options) {
 
+  var pageParameters;
   var dir;
   var zip;
   var comp;
   var clean;
+  var bd;
 
   function generatePath(directory, destination) {
     return `${directory}/${destination}`;
@@ -37,12 +35,14 @@ function run(options) {
 
   function checkVerticalSpread(width, height, ratio, max, delta) {
     var reverse = (1 / max).toFixed(4) / 1;
-    return width < height && ratio < (reverse + delta) && ratio > (reverse - delta);
+    var reverseDelta = (delta / reverse).toFixed(4) / 1;
+    return width < height && ratio < (reverse + reverseDelta) && ratio > (reverse - reverseDelta);
   }
 
   function checkHorizontalIrregular(width, height, ratio, max, delta) {
     var reverse = (1 / max).toFixed(4) / 1;
-    return width > height && (ratio < (reverse - delta) || ratio > (reverse + delta));
+    var reverseDelta = (delta / reverse).toFixed(4) / 1;
+    return width > height && (ratio < (reverse - reverseDelta) || ratio > (reverse + reverseDelta));
   }
 
   function checkVerticalIrregular(width, height, ratio, max, delta) {
@@ -97,12 +97,12 @@ function run(options) {
   }
 
   function newNumber(number, spreadHorizontal, spreadVertical) {
-    return (spreadHorizontal || spreadVertical) ? (number + 2) : (number + 1);
+    return number > 0 && (spreadHorizontal || spreadVertical) ? (number + 2) : (number + 1);
   }
 
   function generateNewName(issue, number, ext, length, spreadHorizontal, spreadVertical) {
     var pageNumber;
-    if (number >= 1 && (spreadHorizontal || spreadVertical)) {
+    if (number > 0 && (spreadHorizontal || spreadVertical)) {
       pageNumber = generateFileSpreadNumber(number, length);
     } else {
       pageNumber = generateFileNumber(number, length);
@@ -122,6 +122,14 @@ function run(options) {
         }
       });
     });
+  }
+
+  function getConfig() {
+    if (bd) {
+      pageParameters = config.bd;
+    } else {
+      pageParameters = config.comic;
+    }
   }
 
   function getIssues() {
@@ -155,19 +163,23 @@ function run(options) {
 
   function getIssueLength(pages, issuePath) {
     var length = 0;
-    pages.map(function(page) {
-      var file = generatePath(issuePath, page);
-      var type = fileType(fs.readFileSync(file));
-      var size;
-      var ratio;
-      var spreadHorizontal;
-      var spreadVertical;
-      if (type && FILE_TYPES.indexOf(type.ext) > -1) {
-        size = sizeOf(file);
-        ratio = calculatePageRatio(size.width, size.height);
-        spreadHorizontal = checkHorizontalSpread(size.width, size.height, ratio, SPREAD_MAX_RATIO, MAX_RATIO_DELTA);
-        spreadVertical = checkVerticalSpread(size.width, size.height, ratio, SPREAD_MAX_RATIO, MAX_RATIO_DELTA);
-        length += getPageLength(spreadHorizontal, spreadVertical);
+    pages.map(function(page, index) {
+      if (index === 0) {
+        var file = generatePath(issuePath, page);
+        var type = fileType(fs.readFileSync(file));
+        var size;
+        var ratio;
+        var spreadHorizontal;
+        var spreadVertical;
+        if (type && config.fileTypes.indexOf(type.ext) > -1) {
+          size = sizeOf(file);
+          ratio = calculatePageRatio(size.width, size.height);
+          spreadHorizontal = checkHorizontalSpread(size.width, size.height, ratio, pageParameters.spreadMaxRatio, config.maxRatioDelta);
+          spreadVertical = checkVerticalSpread(size.width, size.height, ratio, pageParameters.spreadMaxRatio, config.maxRatioDelta);
+          length += getPageLength(spreadHorizontal, spreadVertical);
+        }
+      } else {
+        length += 1;
       }
     });
     return length;
@@ -176,10 +188,10 @@ function run(options) {
   function renameFile(file, number, issuePath, issue, length, fileCount, index) {
     var size = sizeOf(file);
     var ratio = calculatePageRatio(size.width, size.height);
-    var spreadHorizontal = checkHorizontalSpread(size.width, size.height, ratio, SPREAD_MAX_RATIO, MAX_RATIO_DELTA);
-    var spreadVertical = checkVerticalSpread(size.width, size.height, ratio, SPREAD_MAX_RATIO, MAX_RATIO_DELTA);
-    var singleIrregularHorizontal = !spreadHorizontal && checkHorizontalIrregular(size.width, size.height, ratio, SINGLE_MAX_RATIO, MAX_RATIO_DELTA);
-    var singleIrregularVertical = !spreadVertical && checkVerticalIrregular(size.width, size.height, ratio, SINGLE_MAX_RATIO, MAX_RATIO_DELTA);
+    var spreadHorizontal = checkHorizontalSpread(size.width, size.height, ratio, pageParameters.spreadMaxRatio, config.maxRatioDelta);
+    var spreadVertical = checkVerticalSpread(size.width, size.height, ratio, pageParameters.spreadMaxRatio, config.maxRatioDelta);
+    var singleIrregularHorizontal = !spreadHorizontal && checkHorizontalIrregular(size.width, size.height, ratio, pageParameters.singleMaxRatio, config.maxRatioDelta);
+    var singleIrregularVertical = !spreadVertical && checkVerticalIrregular(size.width, size.height, ratio, pageParameters.singleMaxRatio, config.maxRatioDelta);
     var ext = getExtension(file);
     var newName = generateNewName(issue, number, ext, length, spreadHorizontal, spreadVertical);
     warnIrregular(singleIrregularHorizontal, singleIrregularVertical, newName);
@@ -201,7 +213,7 @@ function run(options) {
     pages.map(function(page, index) {
       var file = generatePath(issuePath, page);
       var type = fileType(fs.readFileSync(file));
-      if (type && FILE_TYPES.indexOf(type.ext) > -1) {
+      if (type && config.fileTypes.indexOf(type.ext) > -1) {
         number = renameFile(file, number, issuePath, issue, length, fileCount, index);
       } else {
         if (clean) {
@@ -277,11 +289,13 @@ function run(options) {
       zip = options.zip;
       comp = options.comp;
       clean = options.clean;
+      bd = options.bd;
       resolve();
     });
   }
 
   init(options)
+    .then(getConfig)
     .then(checkDirectory)
     .then(getIssues)
     .then(iterateThroughIssues)
