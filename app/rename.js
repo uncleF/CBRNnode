@@ -206,10 +206,24 @@ function run(options) {
     console.log(chalk.yellow(`Removed file ${page} from the ${issue}`));
   }
 
+  function checkBDPage(page, issuePath) {
+    var firstPage = generatePath(issuePath, page);
+    var firstPageType = fileType(fs.readFileSync(firstPage));
+    if (firstPageType && config.fileTypes.indexOf(firstPageType.ext) > -1) {
+      var firstPageSize = sizeOf(firstPage);
+      var firstPageRatio = calculatePageRatio(firstPageSize.width, firstPageSize.height);
+      pageParameters.singleMaxRatio = firstPageRatio;
+      pageParameters.spreadMaxRatio = firstPageRatio * 2;
+    }
+  }
+
   function processPages(pages, issuePath, issue) {
     var number = 0;
     var length = getIssueLength(pages, issuePath);
     var fileCount = pages.length - 1;
+    if (bd) {
+      checkBDPage(pages[0], issuePath);
+    }
     pages.map(function(page, index) {
       var file = generatePath(issuePath, page);
       var type = fileType(fs.readFileSync(file));
