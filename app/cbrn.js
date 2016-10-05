@@ -2,27 +2,22 @@
 
 /* jslint node:true */
 
-var cbrn = require('./rename');
+'use strict';
+
+var issues = require('./issues');
 var args = require('minimist')(process.argv.slice(2));
 
 var options = {
   dir: args.d ? args.d : './',
-  zip: args.zip,
-  comp: args.comp,
-  clean: args.clean,
-  bd: args.bd
+  zip: args.zip
 };
-var help = args.h;
 
-if (!help) {
-  cbrn.run(options);
+if (!args.h) {
+  issues(options);
 } else {
   console.log('Usage: cbrn [options]');
   console.log('Options:');
-  console.log('  -d path - Path to the issues. If ommited current directory will be used');
-  console.log('  --zip - Archive renamed issues');
-  console.log('  --comp - Archive issues without renaming');
-  console.log('  --clean - Remove all non-images found inside each issue while renaming');
-  console.log('  --bd - Processing bandes dessinées');
-  console.log('  -h - Help');
+  console.log('  -d path - Path to the issues. If ommited current directory will be used.');
+  console.log('  --zip - Archive renamed issues.');
+  console.log('  -h - Help.');
 }
