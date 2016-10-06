@@ -18,10 +18,6 @@
       "follow_symlinks": true,
       "name": "CBRNnode: App",
       "path": "app/"
-    }, {
-      "follow_symlinks": true,
-      "name": "CBRNnode: Tests",
-      "path": "tests/"
     }
   ]
 }
