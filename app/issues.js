@@ -2,10 +2,10 @@
 
 'use strict';
 
-var Promise = require('bluebird');
 let fs = require('fs');
 let chalk = require('chalk');
 let issue = require('./issue');
+
 let config = require('./configs.json');
 
 module.exports = options => {
@@ -42,15 +42,18 @@ module.exports = options => {
   }
 
   function handleIssues(dirs) {
-    return new Promise.all(dirs.map(dir => issue(dir, options)));
+    return Promise.all(dirs.map(dir => issue(dir, options)));
   }
 
   function logError(error) {
     console.error(chalk.red(`✗ ${error}`));
+    if (error.stack) {
+      console.error(error.stack);
+    }
   }
 
   function logSuccess() {
-    console.log(chalk.green('Done\n'));
+    console.log(chalk.green('Done'));
   }
 
   return Promise.resolve()
@@ -58,7 +61,7 @@ module.exports = options => {
     .then(checkDirectory)
     .then(readIssues)
     .then(handleIssues)
-    .catch(logError)
-    .done(logSuccess);
+    .then(logSuccess)
+    .catch(logError);
 
 };

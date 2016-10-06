@@ -2,7 +2,6 @@
 
 'use strict';
 
-var Promise = require('bluebird');
 let fs = require('fs');
 let archiver = require('archiver');
 let chalk = require('chalk');
@@ -10,14 +9,19 @@ let page = require('./page');
 
 module.exports = (dir, options) => {
 
-  function updateConfig() {
-    options.issuePath = `${options.dir}/${dir}`;
+  let issue;
+
+  function issueConfig() {
+    issue = {
+      issue: dir,
+      issuePath: `${options.dir}/${dir}`
+    };
     return Promise.resolve();
   }
 
   function checkDirectory() {
     return new Promise((resolve, reject) => {
-      fs.stat(options.issuePath, (error, status) => {
+      fs.stat(issue.issuePath, (error, status) => {
         if (error) {
           reject(error);
         } else if (!status.isDirectory()) {
@@ -31,7 +35,7 @@ module.exports = (dir, options) => {
 
   function readIssue() {
     return new Promise((resolve, reject) => {
-      fs.readdir(options.issuePath, (error, pages) => {
+      fs.readdir(issue.issuePath, (error, pages) => {
         if (error) {
           reject(error);
         } else {
@@ -45,15 +49,18 @@ module.exports = (dir, options) => {
     let index = 0;
     let length = pages.length;
     while (index < length) {
-      let basePagePath = `${options.issuePath}/${pages[index]}`;
+      let basePagePath = `${issue.issuePath}/${pages[index]}`;
       let basePageType = page.getFileType(basePagePath);
       if (basePageType && options.config.fileTypes.indexOf(basePageType.ext) > -1) {
-        var basePageSize = page.getPageSize(basePagePath);
-        var basePageRatio = page.calculatePageRatio(basePageSize);
-        options.config.singleMaxRatio = basePageRatio;
-        options.config.spreadMaxRatio = basePageRatio / 2;
-        options.config.singleMaxRatioReverse = (1 / options.config.singleMaxRatio).toFixed(4) / 1;
-        options.config.spreadMaxRatioReverse = (1 / options.config.spreadMaxRatio).toFixed(4) / 1;
+        let basePageSize = page.getPageSize(basePagePath);
+        let basePageRatio = page.calculatePageRatio(basePageSize);
+        let basePageSpreadRatio = basePageRatio / 2;
+        issue.config = {
+          singleMaxRatio: basePageRatio,
+          spreadMaxRatio: basePageSpreadRatio,
+          singleMaxRatioReverse: (1 / basePageRatio).toFixed(4) / 1,
+          spreadMaxRatioReverse: (1 / basePageSpreadRatio).toFixed(4) / 1
+        };
         return Promise.resolve(pages);
       }
     }
@@ -63,30 +70,36 @@ module.exports = (dir, options) => {
   function prepareIssue(pages) {
     let issuePages = [];
     let issueLength = pages.reduce((value, file, index) => {
-      let pageData = page.getData(file, index, options);
-      issuePages.push(pageData);
-      return value + pageData.length;
+      let pageData = page.getData(file, index, issue, options);
+      if (pageData) {
+        issuePages.push(pageData);
+        return value + pageData.length;
+      }
     }, 0);
-    let issue = {
-      pages: issuePages,
-      length: issueLength
-    };
+    issue.pages = issuePages;
+    issue.length = issueLength;
     return Promise.resolve(issue);
   }
 
   function renameIssue(issue) {
-    return new Promise.all(issue.pages.map(issuePage => page.rename(issuePage, issue, options)));
+    let promises = [];
+    issue.pages.reduce((pageNumber, issuePage) => {
+      issuePage.number = pageNumber;
+      promises.push(page.rename(issuePage, issue, options));
+      return pageNumber + issuePage.length;
+    }, 0);
+    return Promise.all(promises);
   }
 
   function archiveFiles() {
     return new Promise((resolve, reject) => {
-      let output = fs.createWriteStream(`${options.issuePath}.zip`);
+      let output = fs.createWriteStream(`${issue.issuePath}.zip`);
       let archive = archiver('zip');
       output.on('close', resolve);
       archive.pipe(output);
       archive.bulk([{
         expand: true,
-        cwd: options.issuePath,
+        cwd: issue.issuePath,
         src: ['*.*'],
         dest: dir
       }]);
@@ -95,27 +108,25 @@ module.exports = (dir, options) => {
   }
 
   function archiveIssue() {
-    return new Promise(function(resolve, reject) {
-      if (options.zip) {
-        return archiveFiles();
-      } else {
-        resolve();
-      }
-    });
+    if (options.zip) {
+      return archiveFiles();
+    } else {
+      return Promise.resolve();
+    }
   }
 
   function logSuccess() {
-    console.log(chalk.green('✔') + ` ${dir}`);
+    console.log(chalk.green('✓') + ` ${dir}`);
   }
 
-  return new Promise.resolve()
-    .then(updateConfig)
+  return Promise.resolve()
+    .then(issueConfig)
     .then(checkDirectory)
     .then(readIssue)
     .then(calculateBaseline)
     .then(prepareIssue)
     .then(renameIssue)
     .then(archiveIssue)
-    .done(logSuccess);
+    .then(logSuccess);
 
 };

@@ -2,12 +2,11 @@
 
 'use strict';
 
-var Promise = require('bluebird');
 let fs = require('fs');
-let number = require('./number');
 var fileType = require('file-type');
 var imageSize = require('image-size');
 let chalk = require('chalk');
+let number = require('./number');
 
 /* Utilities */
 
@@ -25,20 +24,20 @@ function isOutside(point, center, radius) {
 
 /* Page Layout */
 
-function checkHorizontalSpread(size, ratio, config) {
-  return isWidthLonger(size) && isInside(ratio, config.spreadMaxRatio, config.maxRatioDelta);
+function checkHorizontalSpread(size, ratio, issueConfig, optionsConfig) {
+  return isWidthLonger(size) && isInside(ratio, issueConfig.spreadMaxRatio, optionsConfig.maxRatioDelta);
 }
 
-function checkVerticalSpread(size, ratio, config) {
-  return !isWidthLonger(size) && isInside(ratio, config.spreadMaxRatioReverse, config.maxRatioDelta);
+function checkVerticalSpread(size, ratio, issueConfig, optionsConfig) {
+  return !isWidthLonger(size) && isInside(ratio, issueConfig.spreadMaxRatioReverse, optionsConfig.maxRatioDelta);
 }
 
-function checkHorizontalIrregular(size, ratio, config) {
-  return isWidthLonger(size) && isOutside(ratio, config.spreadMaxRatioReverse, config.maxRatioDelta);
+function checkHorizontalIrregular(size, ratio, issueConfig, optionsConfig) {
+  return isWidthLonger(size) && isOutside(ratio, issueConfig.singleMaxRatioReverse, optionsConfig.maxRatioDelta);
 }
 
-function checkVerticalIrregular(size, ratio, config) {
-  return !isWidthLonger(size) && isOutside(ratio, config.spreadMaxRatio, config.maxRatioDelta);
+function checkVerticalIrregular(size, ratio, issueConfig, optionsConfig) {
+  return !isWidthLonger(size) && isOutside(ratio, issueConfig.singleMaxRatio, optionsConfig.maxRatioDelta);
 }
 
 /* Page Data */
@@ -59,11 +58,11 @@ function calculatePageRatio(size) {
   return (size.height / size.width).toFixed(4) / 1;
 }
 
-function getPageLayout(size, ratio, config) {
-  let spreadHorizontal = checkHorizontalSpread(size, ratio, config);
-  let spreadVertical = checkVerticalSpread(size, ratio, config);
-  let singleIrregularHorizontal = !spreadHorizontal ? checkHorizontalIrregular(size, ratio, config) : false;
-  let singleIrregularVertical = !spreadVertical ? checkVerticalIrregular(size, ratio, config) : false;
+function getPageLayout(size, ratio, issueConfig, optionsConfig) {
+  let spreadHorizontal = checkHorizontalSpread(size, ratio, issueConfig, optionsConfig);
+  let spreadVertical = checkVerticalSpread(size, ratio, issueConfig, optionsConfig);
+  let singleIrregularHorizontal = !spreadHorizontal ? checkHorizontalIrregular(size, ratio, issueConfig, optionsConfig) : false;
+  let singleIrregularVertical = !spreadVertical ? checkVerticalIrregular(size, ratio, issueConfig, optionsConfig) : false;
   return {
     spreadHorizontal: spreadHorizontal,
     spreadVertical: spreadVertical,
@@ -76,30 +75,37 @@ function calculatePageLength(index, size, ratio, layout, config) {
   if (index === 0 || (!layout.spreadHorizontal && !layout.spreadVertical)) {
     return 1;
   } else if (layout.spreadHorizontal || layout.spreadVertical) {
-    return Math.ceil(config.singleMaxRatio / ratio);
+    return Math.round(config.singleMaxRatio / ratio);
   }
 }
 
-function getData(file, index, options) {
-  let pagePath = `${options.issuePath}/${file}`;
-  let pageExt = getExtension(file);
-  let pageIndex = index;
-  let pageSize = getPageSize(pagePath);
-  let pageRatio = calculatePageRatio(pageSize);
-  let pageLayout = getPageLayout(pageSize, pageRatio, options.config);
-  let pageLength = calculatePageLength(pageIndex, pageSize, pageRatio, pageLayout, options.config);
-  return {
-    path: pagePath,
-    ext: pageExt,
-    index: pageIndex,
-    size: pageSize,
-    ratio: pageRatio,
-    layout: pageLayout,
-    length: pageLength,
-  };
+function getData(file, index, issue, options) {
+  let pagePath = `${issue.issuePath}/${file}`;
+  let pageType = getFileType(pagePath);
+  if (pageType && options.config.fileTypes.indexOf(pageType.ext) > -1) {
+    let pageExt = getExtension(file);
+    let pageIndex = index;
+    let pageSize = getPageSize(pagePath);
+    let pageRatio = calculatePageRatio(pageSize);
+    let pageLayout = getPageLayout(pageSize, pageRatio, issue.config, options.config);
+    let pageLength = calculatePageLength(pageIndex, pageSize, pageRatio, pageLayout, issue.config);
+    return {
+      path: pagePath,
+      ext: pageExt,
+      index: pageIndex,
+      size: pageSize,
+      ratio: pageRatio,
+      layout: pageLayout,
+      length: pageLength,
+    };
+  } else {
+    fs.unlinkSync(file);
+    console.log(chalk.yellow(`Removed file ${file} from the ${issue.issue}`));
+    return false;
+  }
 }
 
-/* Warn */
+/* Warnings */
 
 function warnIrregular(newName, pageData) {
   if (pageData.layout.singleIrregularHorizontal || pageData.layout.singleIrregularVertical) {
@@ -109,7 +115,7 @@ function warnIrregular(newName, pageData) {
 
 function warnTag(pageData, issue) {
   if (pageData.index === (issue.pages.length - 1) && (pageData.layout.singleIrregularHorizontal || pageData.layout.singleIrregularVertical)) {
-    console.warn(chalk.yellow(`${issue} might contain a tag`));
+    console.warn(chalk.yellow(`${issue.issue} might contain a tag`));
   }
 }
 
@@ -120,32 +126,25 @@ function warn(newName, pageData, issue) {
 
 /* Rename */
 
-// function newNumber(number, spreadHorizontal, spreadVertical) {
-//   return number > 0 && (spreadHorizontal || spreadVertical) ? (number + 2) : (number + 1);
-// }
+function generateNewName(page, issue) {
+  let pageNumber = number(page.number, page.length, issue.length);
+  return `${issue.issue} - ${pageNumber}.${page.ext}`;
+}
 
-// function generateNewName(issue, number, ext, length, spreadHorizontal, spreadVertical) {
-//   var pageNumber;
-//   if (number > 0 && (spreadHorizontal || spreadVertical)) {
-//     pageNumber = generateFileSpreadNumber(number, length);
-//   } else {
-//     pageNumber = generateFileNumber(number, length);
-//   }
-//   return `${issue} - ${pageNumber}.${ext}`;
-// }
-
-// function renameFile(file, number, issuePath, issue, length, fileCount, index) {
-//   var size = sizeOf(file);
-//   var ratio = calculatePageRatio(size.width, size.height);
-//   var ext = getExtension(file);
-
-//   return newNumber(number, spreadHorizontal, spreadVertical);
-// }
-
-// function rename() {
-//   let newName = generateNewName(issue, number, ext, length, spreadHorizontal, spreadVertical);
-//   fs.rename(file, generatePath(issuePath, newName));
-// }
+function rename(pageData, issue, options) {
+  return new Promise((resolve, reject) => {
+    let newName = generateNewName(pageData, issue);
+    let newPath = `${issue.issuePath}/${newName}`;
+    warn(newName, pageData, issue);
+    fs.rename(pageData.path, newPath, error => {
+      if (!error) {
+        resolve();
+      } else {
+        reject(error);
+      }
+    });
+  });
+}
 
 /* Interface */
 

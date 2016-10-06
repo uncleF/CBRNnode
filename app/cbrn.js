@@ -4,10 +4,10 @@
 
 'use strict';
 
-var issues = require('./issues');
-var args = require('minimist')(process.argv.slice(2));
+let issues = require('./issues');
+let args = require('minimist')(process.argv.slice(2));
 
-var options = {
+let options = {
   dir: args.d ? args.d : './',
   zip: args.zip
 };
@@ -17,7 +17,7 @@ if (!args.h) {
 } else {
   console.log('Usage: cbrn [options]');
   console.log('Options:');
-  console.log('  -d path - Path to the issues. If ommited current directory will be used.');
+  console.log('  -d path - Path to the comic books folders. By default current directory is used.');
   console.log('  --zip - Archive renamed issues.');
   console.log('  -h - Help.');
 }

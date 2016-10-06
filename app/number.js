@@ -19,7 +19,5 @@ function generateSpreadNumber(number, pageLength, issueLength) {
 }
 
 module.exports = (number, pageLength, issueLength) => {
-
-  return pageLength > 1 ? generateSingleNumber(number, issueLength) : generateSpreadNumber(number, pageLength, issueLength);
-
+  return pageLength > 1 ? generateSpreadNumber(number, pageLength, issueLength) : generateSingleNumber(number, issueLength);
 };
