@@ -31,15 +31,3 @@ Renaming books in the current directory and archiving them into separate archive
 ```sh
 $ cbrn --zip
 ```
-
-Archiving books in the current directory without renaming files.
-
-```sh
-$ cbrn --comp
-```
-
-Removing all non-images from subdirectories at a root level.
-
-```sh
-$ cbrn --clean
-```
