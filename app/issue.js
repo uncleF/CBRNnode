@@ -116,7 +116,7 @@ module.exports = (dir, options) => {
   }
 
   function logSuccess() {
-    console.log(chalk.green('✓') + ` ${dir}`);
+    console.log(`${chalk.green('✓')} ${dir}`);
   }
 
   return Promise.resolve()
