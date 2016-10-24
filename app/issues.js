@@ -48,7 +48,7 @@ module.exports = options => {
   function logError(error) {
     console.error(chalk.red(`✗ ${error}`));
     if (error.stack) {
-      console.error(error.stack);
+      console.error(error.stack.split('\n'));
     }
   }
 
