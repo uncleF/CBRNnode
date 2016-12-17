@@ -45,6 +45,20 @@ module.exports = (dir, options) => {
     });
   }
 
+  function checkIssue(pages) {
+    return new Promise((resolve, reject) => {
+      fs.stat(`${issue.issuePath}/${pages[0]}`, (error, status) => {
+        if (error) {
+          reject(error);
+        } else if (status.isDirectory()) {
+          reject(`There is a subdirectory in the ${issue.issue}`);
+        } else {
+          resolve(pages);
+        }
+      });
+    });
+  }
+
   function calculateBaseline(pages) {
     let index = 0;
     let length = pages.length;
@@ -123,6 +137,7 @@ module.exports = (dir, options) => {
     .then(issueConfig)
     .then(checkDirectory)
     .then(readIssue)
+    .then(checkIssue)
     .then(calculateBaseline)
     .then(prepareIssue)
     .then(renameIssue)
