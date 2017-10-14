@@ -14,7 +14,7 @@ module.exports = (dir, options) => {
   function issueConfig() {
     issue = {
       issue: dir,
-      issuePath: `${options.dir}/${dir}`
+      issuePath: `${options.dir}${dir}`
     };
     return Promise.resolve();
   }
@@ -75,6 +75,7 @@ module.exports = (dir, options) => {
         };
         return Promise.resolve(pages);
       }
+      index += 1;
     }
     return Promise.reject();
   }
