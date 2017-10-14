@@ -14,7 +14,7 @@ module.exports = (dir, options) => {
   function issueConfig() {
     issue = {
       issue: dir,
-      issuePath: `${options.dir}${dir}`
+      issuePath: `${options.dir}/${dir}`
     };
     return Promise.resolve();
   }

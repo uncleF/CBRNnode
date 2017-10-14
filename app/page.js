@@ -99,8 +99,10 @@ function getData(file, index, issue, options) {
       length: pageLength,
     };
   } else {
-    fs.unlinkSync(file);
-    console.log(chalk.yellow(`Removed file ${file} from the ${issue.issue}`));
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      console.log(chalk.yellow(`Removed file ${file} from the ${issue.issue}`));
+    }
     return false;
   }
 }
