@@ -24,9 +24,7 @@ module.exports = (dir, options) => {
       fs.stat(issue.issuePath, (error, status) => {
         if (error) {
           reject(error);
-        } else if (!status.isDirectory()) {
-          resolve(false);
-        } else {
+        } else if (status.isDirectory()) {
           resolve();
         }
       });
