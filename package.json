@@ -1,6 +1,6 @@
 {
   "name": "cbrnnode",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "CBRNnode",
   "main": "app/cbrn.js",
   "dependencies": {
@@ -17,9 +17,6 @@
   },
   "author": "unclef.npm@gmail.com",
   "license": "ISC",
-  "directories": {
-    "doc": "docs"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/uncleF/CBRNnode.git"
