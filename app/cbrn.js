@@ -20,6 +20,7 @@ if (args.p) {
 } else {
   console.log('Usage: cbrn [options]');
   console.log('Options:');
+  console.log('  -p - Prep.');
   console.log('  -d path - Path to the comic books folders. By default current directory is used.');
   console.log('  --zip - Archive renamed issues.');
   console.log('  -h - Help.');
