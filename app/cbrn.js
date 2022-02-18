@@ -5,6 +5,7 @@
 'use strict';
 
 let issues = require('./issues');
+let prep = require('./prep');
 let args = require('minimist')(process.argv.slice(2));
 
 let options = {
@@ -12,7 +13,9 @@ let options = {
   zip: args.zip
 };
 
-if (!args.h) {
+if (args.p) {
+  prep(options);
+} else if (!args.h) {
   issues(options);
 } else {
   console.log('Usage: cbrn [options]');
