@@ -88,6 +88,7 @@ module.exports = (dir, options) => {
         issuePages.push(pageData);
         return value + pageData.length;
       }
+      return value;
     }, 0);
     issue.pages = issuePages;
     issue.length = issueLength;

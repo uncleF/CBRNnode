@@ -4,7 +4,6 @@
 
 let fs = require('fs');
 let path = require('path');
-let archiver = require('archiver');
 let chalk = require('chalk');
 
 module.exports = (file, options) => {
@@ -17,8 +16,9 @@ module.exports = (file, options) => {
     return `.${extension}`;
   }
 
-  function replaceNumber(match, group) {
-    return `#${group.padStart(3, '0')}.`;
+  function replaceNumber(match, numberGroup, extensionGroup) {
+    if (numberGroup) return `#${numberGroup.padStart(3, "0")}.${extensionGroup}`;
+    return `.${extensionGroup}`;
   }
 
   function processFile(filename) {
@@ -26,7 +26,7 @@ module.exports = (file, options) => {
     const newExtension = pickExtension(extension);
     return filename
       .replace(/\s\((of\s)?\d*?\).*/, newExtension)
-      .replace(/(\d*)\./, replaceNumber);
+      .replace(/(\d*)\.(rar|zip)/, replaceNumber);
   }
 
   function archiveConfig() {
