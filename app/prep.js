@@ -5,7 +5,6 @@
 let fs = require('fs');
 let archive = require('./archive');
 let chalk = require('chalk');
-let page = require('./page');
 
 module.exports = (options) => {
 

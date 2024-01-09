@@ -6,7 +6,7 @@ let fs = require('fs');
 let chalk = require('chalk');
 let issue = require('./issue');
 
-let config = require('./configs.json');
+let config = require('./config.json');
 
 module.exports = options => {
 

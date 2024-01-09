@@ -6,6 +6,8 @@ let fs = require('fs');
 let path = require('path');
 let chalk = require('chalk');
 
+let config = require('./config.json');
+
 module.exports = (file, options) => {
 
   let archive;
@@ -16,17 +18,41 @@ module.exports = (file, options) => {
     return `.${extension}`;
   }
 
-  function replaceNumber(match, numberGroup, extensionGroup) {
-    if (numberGroup) return `#${numberGroup.padStart(3, "0")}.${extensionGroup}`;
-    return `.${extensionGroup}`;
+  function padIssueNumber(issueNumber) {
+    const padLength = issueNumber.length > 3 ? issueNumber.length : 3;
+    return issueNumber.padStart(padLength, "0");
+  }
+
+  function normalizeIssueTitle(issueTitle) {
+    for (const [key, value] of Object.entries(config.replacements)) {
+      issueTitle = issueTitle.replace(new RegExp(key, 'g'), value);
+    }
+    return issueTitle;
+  }
+
+  function processIssueWithNumber(filename, issueNumberMatch, newExtension) {
+    const issueTitleRegexp = new RegExp(`(.+?)(?:${issueNumberMatch[0]})`);
+    let issueTitle = filename.match(issueTitleRegexp)[1];
+    issueTitle = normalizeIssueTitle(issueTitle);
+    return `${issueTitle.trim()} #${padIssueNumber(issueNumberMatch[1])}${newExtension}`;
+  }
+
+  function processIssueWithoutNumber(filename, extension, newExtension) {
+    let issueTitle = filename.replace(/\(.*?\)/gm, "");
+    issueTitle = issueTitle.replace(extension, "");
+    issueTitle = normalizeIssueTitle(issueTitle);
+    return `${issueTitle.trim()}${newExtension}`;
   }
 
   function processFile(filename) {
     const extension = path.extname(filename);
     const newExtension = pickExtension(extension);
-    return filename
-      .replace(/\s\((of\s)?\d*?\).*/, newExtension)
-      .replace(/(\d*)\.(rar|zip)/, replaceNumber);
+    const issueNumberMatch = filename.match(/(?:^|\s#?)(\d+)(?![^()]*\))/);
+    if (issueNumberMatch) {
+      return processIssueWithNumber(filename, issueNumberMatch, newExtension);
+    } else {
+      return processIssueWithoutNumber(filename, extension, newExtension);
+    }
   }
 
   function archiveConfig() {
