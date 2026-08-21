@@ -2,9 +2,9 @@
 
 'use strict';
 
-let fs = require('fs');
-let archive = require('./archive');
-let chalk = require('chalk');
+const fs = require('fs');
+const archive = require('./archive');
+const chalk = require('chalk');
 
 module.exports = (options) => {
 
@@ -41,7 +41,7 @@ module.exports = (options) => {
   function logError(error) {
     console.error(chalk.red(`✗ ${error}`));
     if (error.stack) {
-      console.error(error.stack.split('\n'));
+      console.error(error.stack);
     }
   }
 
@@ -55,4 +55,4 @@ module.exports = (options) => {
     .then(handleArchives)
     .then(logSuccess)
     .catch(logError);
-}
+};

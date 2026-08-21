@@ -2,11 +2,10 @@
 
 'use strict';
 
-let fs = require('fs');
-let chalk = require('chalk');
-let issue = require('./issue');
-
-let config = require('./config.json');
+const fs = require('fs');
+const chalk = require('chalk');
+const issue = require('./issue');
+const config = require('./config.json');
 
 module.exports = options => {
 
@@ -48,7 +47,7 @@ module.exports = options => {
   function logError(error) {
     console.error(chalk.red(`✗ ${error}`));
     if (error.stack) {
-      console.error(error.stack.split('\n'));
+      console.error(error.stack);
     }
   }
 
@@ -63,5 +62,4 @@ module.exports = options => {
     .then(handleIssues)
     .then(logSuccess)
     .catch(logError);
-
 };

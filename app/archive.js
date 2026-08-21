@@ -2,11 +2,24 @@
 
 'use strict';
 
-let fs = require('fs');
-let path = require('path');
-let chalk = require('chalk');
+const fs = require('fs');
+const path = require('path');
+const chalk = require('chalk');
+const config = require('./config.json');
 
-let config = require('./config.json');
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const lowerCaseConfig = {};
+for (const [key, value] of Object.entries(config.replacements)) {
+  lowerCaseConfig[key.toLowerCase()] = value;
+}
+
+const titlesRegex = new RegExp(
+  Object.keys(config.replacements).map(escapeRegExp).join('|'),
+  'gi'
+);
 
 module.exports = (file, options) => {
 
@@ -15,19 +28,16 @@ module.exports = (file, options) => {
   function pickExtension(extension) {
     if (extension === '.cbr' || extension === '.rar') return '.rar';
     if (extension === '.cbz' || extension === '.zip') return '.zip';
-    return `.${extension}`;
+    return `${extension}`;
   }
 
   function padIssueNumber(issueNumber) {
-    const padLength = issueNumber.length > 3 ? issueNumber.length : 3;
+    const padLength = Math.max(issueNumber.length, 3);
     return issueNumber.padStart(padLength, "0");
   }
 
   function normalizeIssueTitle(issueTitle) {
-    for (const [key, value] of Object.entries(config.replacements)) {
-      issueTitle = issueTitle.replace(new RegExp(key, 'g'), value);
-    }
-    return issueTitle;
+    return issueTitle.replace(titlesRegex, (match) => lowerCaseConfig[match.toLowerCase()]);
   }
 
   function processIssueWithNumber(filename, issueNumberMatch, newExtension) {
@@ -60,8 +70,8 @@ module.exports = (file, options) => {
     archive = {
       file: file,
       newFileName: newFileName,
-      filePath: `${options.dir}/${file}`,
-      newFilePath: `${options.dir}/${newFileName}`,
+      filePath: path.join(options.dir, file),
+      newFilePath: path.join(options.dir, newFileName),
     };
     return Promise.resolve();
   }
@@ -99,5 +109,4 @@ module.exports = (file, options) => {
     .then(checkFile)
     .then(renameFiles)
     .then(logSuccess);
-
 };

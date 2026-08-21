@@ -2,11 +2,11 @@
 
 'use strict';
 
-let fs = require('fs');
-var fileType = require('file-type');
-var imageSize = require('image-size');
-let chalk = require('chalk');
-let number = require('./number');
+const fs = require('fs');
+const fileType = require('file-type');
+const imageSize = require('image-size');
+const chalk = require('chalk');
+const number = require('./number');
 
 /* Utilities */
 
@@ -15,11 +15,11 @@ function isWidthLonger(size) {
 }
 
 function isInside(point, center, radius) {
- return point < (center + radius) && point > (center - radius);
+  return point < (center + radius) && point > (center - radius);
 }
 
 function isOutside(point, center, radius) {
- return point < (center - radius) || point > (center + radius);
+  return point < (center - radius) || point > (center + radius);
 }
 
 /* Page Layout */

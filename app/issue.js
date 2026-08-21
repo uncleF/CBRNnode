@@ -2,10 +2,10 @@
 
 'use strict';
 
-let fs = require('fs');
-let archiver = require('archiver');
-let chalk = require('chalk');
-let page = require('./page');
+const fs = require('fs');
+const archiver = require('archiver');
+const chalk = require('chalk');
+const page = require('./page');
 
 module.exports = (dir, options) => {
 
@@ -108,15 +108,10 @@ module.exports = (dir, options) => {
   function archiveFiles() {
     return new Promise((resolve, reject) => {
       let output = fs.createWriteStream(`${issue.issuePath}.zip`);
-      let archive = archiver('zip');
+      let archive = new archiver.ZipArchive();
       output.on('close', resolve);
       archive.pipe(output);
-      archive.bulk([{
-        expand: true,
-        cwd: issue.issuePath,
-        src: ['*.*'],
-        dest: dir
-      }]);
+      archive.glob('*.*', { cwd: issue.issuePath }, { prefix: dir });
       archive.finalize();
     });
   }
@@ -143,5 +138,4 @@ module.exports = (dir, options) => {
     .then(renameIssue)
     .then(archiveIssue)
     .then(logSuccess);
-
 };
