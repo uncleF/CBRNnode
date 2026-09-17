@@ -7,7 +7,7 @@
     "archiver": "^8.0.0",
     "chalk": "1.1.1",
     "file-type": "3.4.0",
-    "image-size": "0.4.0",
+    "image-size": "npm:image-size-next@1.2.2",
     "minimist": "^1.2.8"
   },
   "scripts": {},
